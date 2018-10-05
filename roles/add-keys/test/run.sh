@@ -1,0 +1,1 @@
+ansible-playbook -i inventory/hosts test-pb-add-keys.yml -vvv

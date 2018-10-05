@@ -1,0 +1,4 @@
+privateKeyLocation: "../../../../aws-dev-kondor-private.pem"
+hostGroup: "[webserver]"
+hostPath: "../test/inventory/hosts"
+hostString: "ansible_ssh_user=ec2-user ansible_ssh_private_key_file=../../../../aws-dev-kondor-private.pem"
