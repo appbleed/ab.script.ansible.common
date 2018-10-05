@@ -1,4 +1,4 @@
-# Ansible TCORP create EC2 from AMI ansible role.
+# Ansible create EC2 from AMI ansible role.
 
 ### Authored by Shravan Jha
 
