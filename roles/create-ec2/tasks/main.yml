@@ -1,0 +1,42 @@
+- name: Create an EC2 key
+  ec2_key:
+    name: "{{ projectName }}-{{ env }}-key"
+    region: "{{ region }}"
+  register: ec2_key
+
+- name: Save private key
+  copy: content="{{ ec2_key.key.private_key }}" dest="{{ privateKeyLocation }}" mode=0600
+  when: ec2_key.changed
+
+- name: Create an EC2 instance
+  ec2:
+    key_name: "{{ projectName }}-{{ env }}-key"
+    region: "{{ region }}"
+    group_id: "{{ securityGroupId }}"
+    instance_type: "{{ instanceType }}"
+    image: "{{ ami }}"
+    wait: yes
+    instance_tags:
+        env: "{{ env }}"
+    count_tag: env
+    exact_count: 1
+    vpc_subnet_id: "{{ vpcSubnetId }}"
+    assign_public_ip: yes
+  register: ec2
+
+- name: Add the newly created EC2 instance(s) to host group
+  lineinfile: dest={{ hostPath }}
+              regexp={{ item.public_ip }} 
+              insertafter="{{ hostGroup }}" 
+              line="{{ item.public_ip }} {{hostString}}"
+              state=present
+  with_items: "{{ ec2.instances }}"
+
+- wait_for: path={{ hostPath }} search_regex={{hostString}}
+
+- name: Wait for SSH to come up
+  local_action: wait_for 
+                host={{ item.public_ip }} 
+                port=22 
+                state=started
+  with_items: "{{ ec2.instances }}"

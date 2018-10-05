@@ -1,0 +1,1 @@
+ansible-playbook -i inventory/hosts test-pb-create-ec2.yml -vvv

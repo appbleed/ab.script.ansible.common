@@ -1,0 +1,32 @@
+---
+
+- name: Setting the hostname
+  become: yes
+  hostname:
+    name: "{{ hostname }}.{{ domain | default('localdomain') }}"
+- name: Setting the local host name resolution
+  become: yes
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.0\.1'
+    line: "127.0.0.1 {{ hostname | default('localhost') }}.{{ domain | default('localdomain') }} {{ hostname | default('localhost') }}"
+
+- name: Persist the hostname between instance stops/starts and reboots of your RHEL 7 or Centos 7 Linux instance
+  become: yes
+  shell: |
+    sudo hostnamectl set-hostname --static {{ hostname }}
+    sudo su - root
+    echo "{{ hostname }}: true" >> /etc/cloud/cloud.cfg
+    exit
+
+- name: Rebooting machine
+  become: yes
+  command: shutdown -r now "Rebooting for the new hostname to go into effect"
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: Waiting for the system to come back to service
+  local_action: wait_for host={{ hostname }} state=started delay=30 timeout=300
+  sudo: false
+
